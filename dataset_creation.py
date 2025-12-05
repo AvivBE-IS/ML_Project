@@ -1,5 +1,6 @@
 import pandas as pd
 import re
+from collections import Counter
 
 
 #Pre-Processing
@@ -63,15 +64,58 @@ df['clean_title'] = df['title'].apply(clean_text)
 df['clean_body'] = df['body'].apply(clean_text)
 df['combined_text'] = df['clean_title'] + " " + df['clean_body']
 
-# --- Step 3: Save ---
-output_file = "processed_data.csv"
-df.to_csv(output_file, index=False)
-print(f"\nSuccess! Processed data saved to: {output_file}")
-
 #Segmentation
+# --- Step 2.5: Segmentation ---
 # The following recommended steps for text labeling have already been performed:
 # 1. Field Segmentation: Completed (in sensing.py).
 # 2. Word Normalization: Completed (in dataset_creation.py).
 # 3. Model Input: The full 'combined_text' is passed to the model.
 #    (This is the standard approach for document classification).
+
+
+# --- Step 3: Feature Extraction (Bag of Words) ---
+# It acts as a translator that turns English text into Math.
+# The Vocabulary: First, the code scanned all your articles to find the 1,000 most common words (like "election", "game", "court") to create a master list.
+# The Counting: It then revisited every single article and counted exactly how many times those specific words appeared in the text.
+# The Result: Instead of sentences, you now have a grid of numbers.
+# If an article is about sports, the column for the word "ball" might have a 5.
+# If an article is about politics, the column for the word "ball" will likely have a 0.
+print("\n--- Feature Extraction ---")
+
+# 1. Build Vocabulary (Find top 1000 most common words)
+# We join all text into one giant string, split it, and count the words
+all_words = pd.Series(' '.join(df['combined_text']).split())
+vocabulary = all_words.value_counts().head(1000).index.tolist()
+
+print(f"Vocabulary size: {len(vocabulary)} words")
+
+# 2. Create Feature Matrix
+# We count how often the vocabulary words appear in each specific article
+def count_features(text):
+    # Count all words in this specific text
+    word_counts = Counter(text.split())
+    # Only keep the counts for words that are in our main vocabulary
+    return {word: word_counts.get(word, 0) for word in vocabulary}
+
+# Apply this to every row
+features_list = df['combined_text'].apply(count_features).tolist()
+features_df = pd.DataFrame(features_list)
+
+# Fill empty spots with 0 (meaning the word didn't appear in that article)
+features_df = features_df.fillna(0).astype(int)
+
+# Add the label back so the model knows the answer
+features_df['label'] = df['label']
+
+print(f"Features Matrix shape: {features_df.shape}")
+
+# --- Step 4: Save ---
+output_file = "processed_data.csv"
+df.to_csv(output_file, index=False)
+
+feature_file = "features_data.csv"
+features_df.to_csv(feature_file, index=False)
+
+print(f"\nSuccess! Processed data saved to: {output_file}")
+print(f"Success! Numerical features saved to: {feature_file}")
 

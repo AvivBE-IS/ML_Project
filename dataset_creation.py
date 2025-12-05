@@ -68,4 +68,10 @@ output_file = "processed_data.csv"
 df.to_csv(output_file, index=False)
 print(f"\nSuccess! Processed data saved to: {output_file}")
 
+#Segmentation
+# The following recommended steps for text labeling have already been performed:
+# 1. Field Segmentation: Completed (in sensing.py).
+# 2. Word Normalization: Completed (in dataset_creation.py).
+# 3. Model Input: The full 'combined_text' is passed to the model.
+#    (This is the standard approach for document classification).
 

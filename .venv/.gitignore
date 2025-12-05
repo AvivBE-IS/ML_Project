@@ -1,0 +1,14 @@
+# created by virtualenv automatically
+# Secrets
+secrets.py
+
+# Virtual Environment
+.venv/
+
+# Data
+data/
+
+# IDE
+.idea/
+__pycache__/
+*.py[cod]

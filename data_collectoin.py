@@ -32,7 +32,7 @@ import requests
 from requests.exceptions import RequestException
 from secrets import API_KEY
 
-API_KEY = "fc5a20ca-99da-44a1-8b5b-dfcbb27c1fb7"
+
 BASE_URL = "https://content.guardianapis.com/search"
 INDEX_PATH = Path("data") / "index.json"
 
@@ -44,7 +44,6 @@ SECTION_TO_FOLDER = {
 }
 
 
-API_KEY = "fc5a20ca-99da-44a1-8b5b-dfcbb27c1fb7"
 BASE_URL = "https://content.guardianapis.com/search"
 INDEX_PATH = Path("data") / "index.json"
 

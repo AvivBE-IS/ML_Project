@@ -30,7 +30,7 @@ import json
 from pathlib import Path
 import requests
 from requests.exceptions import RequestException
-from secrets import API_KEY
+from my_secrets import API_KEY
 
 
 BASE_URL = "https://content.guardianapis.com/search"

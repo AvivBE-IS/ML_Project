@@ -4,6 +4,7 @@ from collections import Counter
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.preprocessing import MinMaxScaler
 import matplotlib.pyplot as plt
+from sklearn.decomposition import PCA
 
 
 #Pre-Processing
@@ -138,3 +139,98 @@ tfidf_df.to_csv(tfidf_file, index=False)
 print(tfidf_df.head().to_string())
 print(f"\nSuccess! TF-IDF features saved to: {tfidf_file}")
 # --- Step 4: Feature Selection ---
+from sklearn.feature_selection import SelectKBest, chi2
+import pandas as pd
+
+print("\n--- Step 4: Feature Selection (Chi-Square Filter) ---")
+
+# Separate features (X) and target label (y)
+X = tfidf_df.drop('label', axis=1)
+y = tfidf_df['label']
+
+print(f"Original Feature Count: {X.shape[1]}")
+
+# Initialize Chi-Square selector to keep top 1000 features
+k_best_selector = SelectKBest(score_func=chi2, k=1000)
+X_new = k_best_selector.fit_transform(X, y)
+
+# Get the names of the selected features
+selected_mask = k_best_selector.get_support()
+selected_feature_names = X.columns[selected_mask]
+
+# Create a new DataFrame with only the selected features
+filtered_df = pd.DataFrame(X_new, columns=selected_feature_names)
+filtered_df['label'] = y.values
+
+print(f"New Feature Count: {filtered_df.shape[1]-1}")
+
+# Save the filtered dataset
+filtered_file = "selected_features.csv"
+filtered_df.to_csv(filtered_file, index=False)
+
+print(f"Selected features saved to: {filtered_file}")
+
+# Display the top 10 most informative features
+scores = pd.DataFrame({'Feature': X.columns, 'Score': k_best_selector.scores_})
+print("\nTop 10 Most Informative Features:")
+print(scores.sort_values(by='Score', ascending=False).head(10).to_string(index=False))
+
+
+# --- Step 5: Dimensionality Reduction ---
+
+
+print("\n--- Step 6: Dimensionality Reduction (PCA) & Visualization ---")
+
+# 1. Prepare the data
+# We use the filtered dataset from Step 5 (Feature Selection)
+# 'filtered_df' should be in memory. If not, uncomment the lines below to load it:
+# filtered_df = pd.read_csv("selected_features.csv")
+
+# Separate features (X) and target label (y)
+X_for_pca = filtered_df.drop('label', axis=1)
+y_for_pca = filtered_df['label']
+
+# 2. Perform PCA - Reduce to 3 dimensions
+pca = PCA(n_components=3)
+X_pca = pca.fit_transform(X_for_pca)
+
+# 3. Create a DataFrame for the results
+# This makes plotting easier
+pca_df = pd.DataFrame(data=X_pca, columns=['PC1', 'PC2', 'PC3'])
+pca_df['label'] = y_for_pca.values
+
+print(f"Data reduced from {X_for_pca.shape[1]} dimensions to 3 dimensions.")
+
+# 4. Create a 3D Scatter Plot
+fig = plt.figure(figsize=(10, 8))
+ax = fig.add_subplot(111, projection='3d')
+
+# Map labels to colors (optional, for better customization)
+# Adjust the keys ('Benign', 'Malicious') to match your actual data labels
+colors = {'Benign': 'blue', 'Malicious': 'red'} 
+
+# Plot the points
+# We factorize the label to convert string labels to numbers for coloring
+sc = ax.scatter(pca_df['PC1'], pca_df['PC2'], pca_df['PC3'], 
+                c=pd.factorize(pca_df['label'])[0], 
+                cmap='viridis', # Colormap
+                s=50,           # Dot size
+                alpha=0.6)      # Transparency
+
+# Set axis labels and title
+ax.set_xlabel('Principal Component 1')
+ax.set_ylabel('Principal Component 2')
+ax.set_zlabel('Principal Component 3')
+ax.set_title('3D Visualization of Malware vs Benign (PCA)')
+
+# Add a legend
+# Note: This automatically creates a legend based on the unique values in 'c'
+plt.legend(*sc.legend_elements(), title="Classes")
+
+# Show the plot
+plt.show()
+
+# 5. Save the reduced dataset (Optional)
+# This file can be used later for training models on the reduced data
+pca_df.to_csv("pca_3d_dataset.csv", index=False)
+print("PCA dataset saved to: pca_3d_dataset.csv")

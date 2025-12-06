@@ -5,7 +5,8 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.preprocessing import MinMaxScaler
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
-
+from sklearn.model_selection import StratifiedKFold, cross_val_score
+from sklearn.linear_model import LogisticRegression
 
 #Pre-Processing
 # The script loads raw data from the CSV file into a data table.
@@ -179,7 +180,7 @@ print(scores.sort_values(by='Score', ascending=False).head(10).to_string(index=F
 # --- Step 5: Dimensionality Reduction ---
 
 
-print("\n--- Step 6: Dimensionality Reduction (PCA) & Visualization ---")
+print("\n--- Step 5: Dimensionality Reduction (PCA) & Visualization ---")
 
 # 1. Prepare the data
 # We use the filtered dataset from Step 5 (Feature Selection)
@@ -234,3 +235,43 @@ plt.show()
 # This file can be used later for training models on the reduced data
 pca_df.to_csv("pca_3d_dataset.csv", index=False)
 print("PCA dataset saved to: pca_3d_dataset.csv")
+
+
+
+# --- Step 6: Validation ---
+print("\n--- Step 6: Validation (Logistic Regression with K-Fold) ---")
+
+# 1. Prepare Data
+# We use the dataset from Step 5 (Feature Selection) which contains the top 1000 features.
+# If 'filtered_df' is not in memory, uncomment the next line to load it:
+# filtered_df = pd.read_csv('selected_features.csv')
+
+# Separate features (X) and target label (y)
+X = filtered_df.drop('label', axis=1)
+y = filtered_df['label']
+
+# 2. Initialize the Model
+# We use Logistic Regression as requested.
+# max_iter=1000 is set to ensure the solver converges on this dataset size.
+model = LogisticRegression(max_iter=1000)
+
+# 3. Define Validation Strategy
+# StratifiedKFold ensures each fold preserves the percentage of samples for each class.
+# n_splits=10: The standard 10-fold cross-validation.
+# shuffle=True: Randomize the data before splitting.
+cv = StratifiedKFold(n_splits=10, shuffle=True, random_state=42)
+
+# 4. Define Evaluation Metric
+# We use AUC (Area Under Curve) because it is robust for classification tasks.
+metric = 'roc_auc'
+
+# 5. Perform Validation
+# This runs the training and testing process 10 times.
+print("Running Cross-Validation... this might take a moment.")
+scores = cross_val_score(model, X, y, cv=cv, scoring=metric)
+
+# 6. Display Results
+print(f"Validation Method: 10-Fold Stratified Cross-Validation")
+print(f"Chosen Metric: {metric}")
+print(f"\nScores for each fold: \n{scores}")
+print(f"\n>>> Average {metric} Score: {scores.mean():.4f}")

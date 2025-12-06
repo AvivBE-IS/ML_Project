@@ -147,7 +147,7 @@ def main():
 
     for sec in sections:
         try:
-            results = fetch_section_latest(sec, page_size=5)
+            results = fetch_section_latest(sec, page_size=100)  # Changed from 5 to 100
         except RequestException:
             print(f"Failed to fetch section {sec}, skipping.")
             continue

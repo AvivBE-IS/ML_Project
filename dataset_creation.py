@@ -1,6 +1,9 @@
 import pandas as pd
 import re
 from collections import Counter
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.preprocessing import MinMaxScaler
+import matplotlib.pyplot as plt
 
 
 #Pre-Processing
@@ -119,3 +122,19 @@ features_df.to_csv(feature_file, index=False)
 print(f"\nSuccess! Processed data saved to: {output_file}")
 print(f"Success! Numerical features saved to: {feature_file}")
 
+# --- Step 3: Feature Representation ---
+print("\n--- Advanced Feature Representation: TF-IDF ---")
+
+tfidf = TfidfVectorizer()
+tfidf_matrix = tfidf.fit_transform(df['combined_text'])
+
+tfidf_df = pd.DataFrame(tfidf_matrix.toarray(), columns=tfidf.get_feature_names_out())
+
+tfidf_df['label'] = df['label'].values
+
+tfidf_file = "tfidf_features.csv"
+tfidf_df.to_csv(tfidf_file, index=False)
+
+print(tfidf_df.head().to_string())
+print(f"\nSuccess! TF-IDF features saved to: {tfidf_file}")
+# --- Step 4: Feature Selection ---

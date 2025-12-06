@@ -30,7 +30,7 @@ import json
 from pathlib import Path
 import requests
 from requests.exceptions import RequestException
-from secrets import API_KEY
+from my_secrets import API_KEY
 
 
 BASE_URL = "https://content.guardianapis.com/search"
@@ -147,7 +147,7 @@ def main():
 
     for sec in sections:
         try:
-            results = fetch_section_latest(sec, page_size=5)
+            results = fetch_section_latest(sec, page_size=100)  # Changed from 5 to 100
         except RequestException:
             print(f"Failed to fetch section {sec}, skipping.")
             continue
